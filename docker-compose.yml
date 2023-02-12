@@ -1,0 +1,34 @@
+version: "3.7"
+
+services:
+  calibre:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      # - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
+      # - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
+    volumes:
+      - calibreconfig:/config
+      - ${PATH_TO_LIBRARY}:/books
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      #
+      # load interface on https
+      - "traefik.http.routers.calibre-https.rule=Host(`${VIRTUAL_HOST}`)"
+      - "traefik.http.routers.calibre-https.entrypoints=websecure"
+      - "traefik.http.routers.calibre-https.tls=true"
+      - "traefik.http.routers.calibre-https.tls.certresolver=letsencrypt"
+      - "traefik.http.services.calibre.loadbalancer.server.port=8083"
+    networks:
+      - web
+
+volumes:
+  calibreconfig:
+
+networks:
+  web:
+    external: true
